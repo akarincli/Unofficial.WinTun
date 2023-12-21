@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>Unofficial.WinTun</PackageId>
+        <Authors>DWVoid</Authors>
+        <Version>0.14.1</Version>
+        <Description>An unofficial binding of WinTun</Description>
+        <PackageProjectUrl>https://github.com/DWVoid/Unofficial.WinTun</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/DWVoid/Unofficial.WinTun</RepositoryUrl>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <Content Include="..\Binary\**\*.*" Link="..\Binary\%(RecursiveDir)%(Filename)%(Extension)">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Pack>true</Pack>
+            <PackagePath>runtimes\%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+        </Content>
+    </ItemGroup>
+</Project>
