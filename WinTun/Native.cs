@@ -31,7 +31,7 @@ internal static partial class Native
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool DeleteDriver();
 
-    [LibraryImport(DyName, EntryPoint = "WintunCloseAdapter")]
+    [LibraryImport(DyName, EntryPoint = "WintunGetAdapterLUID")]
     internal static partial void GetAdapterLUID(AdapterHandle adapter, nint luid);
 
     [LibraryImport(DyName, EntryPoint = "WintunGetRunningDriverVersion")]

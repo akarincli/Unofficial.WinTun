@@ -5,9 +5,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageId>Unofficial.WinTun</PackageId>
         <Authors>DWVoid</Authors>
-        <Version>0.14.1</Version>
+        <Version>0.14.1.2</Version>
         <Description>An unofficial binding of WinTun</Description>
         <PackageProjectUrl>https://github.com/DWVoid/Unofficial.WinTun</PackageProjectUrl>
         <RepositoryUrl>https://github.com/DWVoid/Unofficial.WinTun</RepositoryUrl>
@@ -15,10 +16,12 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DocumentationFile>bin\Debug\WinTun.xml</DocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DocumentationFile>bin\Release\WinTun.xml</DocumentationFile>
     </PropertyGroup>
     
     <ItemGroup>

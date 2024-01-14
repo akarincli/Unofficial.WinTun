@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -99,25 +98,27 @@ public class Adapter : CriticalHandle
         return new Adapter(hdc);
     }
 
+    /// <inheritdoc/>
     protected override bool ReleaseHandle()
     {
         Native.CloseAdapter(handle);
         return true;
     }
 
+    /// <inheritdoc/>
     public override bool IsInvalid => false;
 
     /// <summary>
     /// Returns the LUID of the adapter.
     /// </summary>
     /// <returns> Adapter LUID </returns>
-    public (ulong, ulong) GetLuid()
+    public ulong GetLuid()
     {
         unsafe
         {
-            var mem = stackalloc ulong[2];
+            var mem = stackalloc ulong[1];
             Native.GetAdapterLUID(handle, (nint)mem);
-            return (mem[0], mem[1]);
+            return mem[0];
         }
     }
 
@@ -137,7 +138,7 @@ public class Adapter : CriticalHandle
     /// <exception cref="Win32Exception"></exception>
     public Session StartSession(uint capacity)
     {
-        if (capacity is < MinRingCapacity or > MaxRingCapacity || (capacity & (capacity - 1)) == 0) 
+        if (capacity is < MinRingCapacity or > MaxRingCapacity || (capacity & (capacity - 1)) != 0) 
             throw new ArgumentException("", nameof(capacity));
         var hdc = Native.StartSession(handle, capacity);
         if (hdc == 0) throw new Win32Exception(Marshal.GetLastWin32Error());
@@ -176,12 +177,14 @@ public class Session : CriticalHandle
     {
     }
 
+    /// <inheritdoc/>
     protected override bool ReleaseHandle()
     {
         Native.EndSession(handle);
         return true;
     }
 
+    /// <inheritdoc/>
     public override bool IsInvalid => false;
 
     /// <summary>
