@@ -1,9 +1,77 @@
-﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 // ReSharper disable MemberCanBePrivate.Global
-
 namespace WinTun;
+
+using AdapterHandle = nint;
+using SessionHandle = nint;
+
+/// <summary> Log level enumeration </summary>
+public enum LoggerLevel
+{
+    /// <summary> INFO level logger </summary>
+    Info = 0,
+    /// <summary> WARN level logger </summary>
+    Warn = 1,
+    /// <summary> ERROR level logger </summary>
+    Error = 2
+}
+
+internal static partial class Native
+{
+    private const string DyName = "wintun";
+
+    [LibraryImport(DyName, EntryPoint = "WintunCreateAdapter", SetLastError = true,
+        StringMarshalling = StringMarshalling.Utf16)]
+    internal static partial AdapterHandle CreateAdapter(string name, string tunnelType, in Guid requestedGuid);
+
+    [LibraryImport(DyName, EntryPoint = "WintunOpenAdapter", SetLastError = true,
+        StringMarshalling = StringMarshalling.Utf16)]
+    internal static partial AdapterHandle OpenAdapter(string name);
+
+    [LibraryImport(DyName, EntryPoint = "WintunCloseAdapter")]
+    internal static partial void CloseAdapter(AdapterHandle adapter);
+
+    [LibraryImport(DyName, EntryPoint = "WintunDeleteDriver", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool DeleteDriver();
+
+    [LibraryImport(DyName, EntryPoint = "WintunGetAdapterLUID")]
+    internal static partial void GetAdapterLUID(AdapterHandle adapter, nint luid);
+
+    [LibraryImport(DyName, EntryPoint = "WintunGetRunningDriverVersion")]
+    internal static partial uint GetRunningDriverVersion();
+
+    public delegate void LoggerCallback(
+        [MarshalAs(UnmanagedType.I4)] LoggerLevel level, ulong timestamp,
+        [MarshalAs(UnmanagedType.LPWStr)] string message
+    );
+
+    [LibraryImport(DyName, EntryPoint = "WintunSetLogger")]
+    internal static partial void SetLogger([MarshalAs(UnmanagedType.FunctionPtr)] LoggerCallback newLogger);
+
+    [LibraryImport(DyName, EntryPoint = "WintunStartSession", SetLastError = true)]
+    internal static partial SessionHandle StartSession(AdapterHandle adapter, uint capacity);
+
+    [LibraryImport(DyName, EntryPoint = "WintunEndSession")]
+    internal static partial void EndSession(SessionHandle session);
+
+    [LibraryImport(DyName, EntryPoint = "WintunGetReadWaitEvent")]
+    internal static partial nint GetReadWaitEvent(SessionHandle session);
+
+    [LibraryImport(DyName, EntryPoint = "WintunReceivePacket", SetLastError = true)]
+    internal static partial nint ReceivePacket(SessionHandle session, out uint packetSize);
+
+    [LibraryImport(DyName, EntryPoint = "WintunReleaseReceivePacket")]
+    internal static partial void ReleaseReceivePacket(SessionHandle session, nint packet);
+
+    [LibraryImport(DyName, EntryPoint = "WintunAllocateSendPacket", SetLastError = true)]
+    internal static partial nint AllocateSendPacket(SessionHandle session, uint packetSize);
+
+    [LibraryImport(DyName, EntryPoint = "WintunSendPacket")]
+    internal static partial void SendPacket(SessionHandle session, nint packet);
+}
 
 public static class Logger
 {
@@ -32,6 +100,7 @@ public static class Logger
         _gLogger(level, timestamp, message);
 }
 
+/// <summary> WinTun driver level operations </summary>
 public static class Driver
 {
     /// <summary>
@@ -56,6 +125,7 @@ public static class Driver
     }
 }
 
+/// <summary> WinTun Adapter Instance </summary>
 public class Adapter : CriticalHandle
 {
     private Adapter(nint handle) : base(handle)
@@ -169,6 +239,7 @@ public readonly struct Packet
     }
 }
 
+/// <summary> WinTun Session Instance </summary>
 public class Session : CriticalHandle
 {
     public const int MaxIpPacketSize = 0xFFFF;
@@ -220,19 +291,14 @@ public class Session : CriticalHandle
     /// <param name="packet"> Packet obtained with ReceivePacket </param>
     public void ReleaseReceivePacket(Packet packet) => Native.ReleaseReceivePacket(handle, packet.Data);
     
-    /// <summary>
-    /// Wait until more packets are ready for read
-    /// </summary>
-    /// <param name="timeout"> Timeout for wait </param>
-    /// <returns> true if wait completed, false if wait timed-out </returns>
-    /// <exception cref="Win32Exception"></exception>
-    public bool WaitForRead(TimeSpan timeout) =>
-        Native.WaitForSingleObject(Native.GetReadWaitEvent(handle), (uint)timeout.Milliseconds) switch
-        {
-            0 => true,
-            0x102 => false,
-            _ => throw new Win32Exception(Marshal.GetLastWin32Error())
-        };
+    /// <summary> Gets Wintun session's read-wait event handle. </summary>
+    /// <returns>
+    /// Pointer to receive event handle to wait for available data when reading. <br/>
+    /// Should ReceivePackets return false (after spinning on it for a while under heavy load),
+    /// wait for this event to become signaled before retrying ReceivePackets. <br/>
+    /// Do not call CloseHandle on this event - it is managed by the session.
+    /// </returns>
+    public nint GetReadWaitEvent() => Native.GetReadWaitEvent(handle);
 
     /// <summary>
     /// Allocates memory for a packet to send.

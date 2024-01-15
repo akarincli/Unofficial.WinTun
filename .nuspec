@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+    <metadata>
+        <id>Unofficial.WinTun</id>
+        <version>0.14.1.4</version>
+        <authors>DWVoid</authors>
+        <projectUrl>https://github.com/DWVoid/Unofficial.WinTun</projectUrl>
+        <description>An unofficial binding of WinTun</description>
+        <repository type="git" url="https://github.com/DWVoid/Unofficial.WinTun"/>
+        <dependencies>
+            <group targetFramework="net8.0"/>
+        </dependencies>
+    </metadata>
+    <files>
+        <!-- wintun unmanaged library -->
+        <file src=".\Binary\**\*.*" target="runtimes\"/>
+        <!-- wintun managed library, win32 runtime only -->
+        <file src=".\bin\Release\net8.0\Unofficial.WinTun.dll" target="runtimes\win\lib\net8.0"/>
+        <!-- wintun reference library -->
+        <file src=".\bin\Release\Unofficial.WinTun.xml" target="ref\net8.0"/>
+        <file src=".\obj\Release\net8.0\ref\Unofficial.WinTun.dll" target="ref\net8.0"/>
+    </files>
+</package>
